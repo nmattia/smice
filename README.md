@@ -4,7 +4,7 @@ The Smart MICE. Oh, That's Smice!
 
 This is a project for [HackZurich 2020](https://hackzurich.com/). This is a
 daemon that moves the cursor between monitors, depending on where the user is
-looking. This is achieves by processing the camera feed.
+looking. This is achievd  by processing the camera feed.
 
 ## Building
 
