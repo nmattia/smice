@@ -148,7 +148,7 @@ while True:
 
     user_looking = user_looking_where()
 
-    # poor man's debugging; we only update this once a second.
+    # poor man's debouncing; we only update this once a second.
     if now_s() - last_s > 1 and tracked != user_looking:
         tracked = user_looking
         cursor = cursors[tracked]
