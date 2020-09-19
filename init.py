@@ -1,6 +1,11 @@
 import pyautogui
 import time
 import math
+import cv2
+from gaze_tracking import GazeTracking
+
+gaze = GazeTracking()
+webcam = cv2.VideoCapture(0)
 
 def now_s():
     return int(round(time.time()))
@@ -11,7 +16,21 @@ where = "where"
 forced = "forced"
 
 def articifial_intel():
-    return "left" if (now_s() % 10) < 5 else "right"
+    _, frame = webcam.read()
+
+    gaze.refresh(frame)
+    frame = gaze.annotated_frame()
+
+    if gaze.is_blinking():
+        return tracked
+    elif gaze.is_right():
+        return "right"
+    elif gaze.is_left():
+        return "left"
+    elif gaze.is_center():
+        return "left"
+    else:
+        return "right"
 
 def user_looking_where():
     now_looking = articifial_intel()
@@ -94,8 +113,8 @@ def still():
     return still_minus_2 == still_minus_1 and still_minus_1 == still_minus_0
 
 while now_s() - start_s < 60:
-    for _ in range(1,100):
-        print("")
+    # for _ in range(1,100):
+        # print("")
 
     if cursors["left"][x] > mid_x:
         print("EERRROOOR LEFT")
@@ -131,3 +150,22 @@ while now_s() - start_s < 60:
     print('AI {}'.format(articifial_intel()))
     print('still {}'.format(is_still))
     time.sleep(0.1)
+
+while True:
+    # We get a new frame from the webcam
+    _, frame = webcam.read()
+
+    # We send this frame to GazeTracking to analyze it
+    gaze.refresh(frame)
+
+    frame = gaze.annotated_frame()
+    text = ""
+
+    if gaze.is_blinking():
+        text = "Blinking"
+    elif gaze.is_right():
+        text = "Looking right"
+    elif gaze.is_left():
+        text = "Looking left"
+    elif gaze.is_center():
+        text = "Looking center"

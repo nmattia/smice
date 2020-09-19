@@ -10,10 +10,11 @@ pkgs.mkShell {
     python3Full
     python3Packages.virtualenv
     python3Packages.pip
-    python3Packages.pysdl2
+    cmake
+    x11
   ];
 
   SOURCE_DATE_EPOCH=315532800;
-  LD_LIBRARY_PATH= "${pkgs.readline}/lib";
+  LD_LIBRARY_PATH= "${pkgs.readline}/lib:${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.glib.out}/lib:${pkgs.xorg.libSM.out}/lib:${pkgs.xorg.libICE.out}/lib:${pkgs.xorg.libXrender}/lib:${pkgs.xorg.libXext}/lib:${pkgs.xorg.libX11}/lib";
 
 }
