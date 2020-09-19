@@ -7,36 +7,53 @@ from gaze_tracking import GazeTracking
 gaze = GazeTracking()
 webcam = cv2.VideoCapture(0)
 
+# Enables more logging and shows a window with the tracking
+debug = False;
+
+# When true, the cursor moves between two monitors (as opposed to between the
+# left and right halves of a single monitor)
+dualMonitor = True
+
+# Current time since epoch, in seconds
 def now_s():
     return int(round(time.time()))
 
+# #IDONTKNOWPYTHON
+# where we assume the user is looking, and whether or not it was forced.
+# The side is "forced" when the user moves the mouse over to the other side.
 looking = { 'where': "", 'forced': False }
-
 where = "where"
 forced = "forced"
 
+# Returns "left" or "right" depending on where the user is looking
 def articifial_intel():
     _, frame = webcam.read()
 
     gaze.refresh(frame)
     frame = gaze.annotated_frame()
-    cv2.putText(frame, tracked, (90, 130), cv2.FONT_HERSHEY_DUPLEX, 2.0, (147, 58, 31), 1)
-    cv2.imshow("Demo", frame)
+    if debug:
+        cv2.putText(frame, tracked, (90, 130), cv2.FONT_HERSHEY_DUPLEX, 2.0, (147, 58, 31), 1)
+        cv2.imshow("Demo", frame)
 
     if gaze.is_blinking():
-        print("BLINK182 (same)")
+        if debug:
+            print("BLINK182 (same)")
         return tracked
     elif gaze.is_right():
-        print("RIGHT (right)")
+        if debug:
+            print("RIGHT (right)")
         return "right"
     elif gaze.is_left():
-        print("LEFT (left)")
+        if debug:
+            print("LEFT (left)")
         return "left"
     elif gaze.is_center():
-        print("CENTER (RIGHT)")
+        if debug:
+            print("CENTER (RIGHT)")
         return "right"
     else:
-        print("I GUESS NOT (same)")
+        if debug:
+            print("I GUESS NOT (same)")
         return tracked
 
 def user_looking_where():
@@ -54,8 +71,8 @@ def tell_user_looking(whr):
     looking[forced] = True
 
 screenWidth, screenHeight = pyautogui.size()
-mid_x = screenWidth#screenWidth / 2
-quarter = screenWidth / 2# screenWidth / 4
+mid_x = screenWidth if dualMonitor else screenWidth / 2
+quarter = screenWidth / 2 if dualMonitor else screenWidth / 4
 
 currentMouseX, currentMouseY = pyautogui.position()
 
@@ -103,8 +120,8 @@ still_minus_2 = cursor[x]
 still_minus_1 = cursor[x]
 still_minus_0 = cursor[x]
 
-#print(still_minus_1)
-
+# returns true if the user has _not_ moved the cursor for 3 iterations in a
+# row.
 def still():
 
     global still_minus_0
@@ -122,33 +139,37 @@ frames = 0
 start_s = now_s()
 last_s=0
 while True:
-    # for _ in range(1,100):
-        # print("")
 
     if cursors["left"][x] > mid_x:
-        print("EERRROOOR LEFT")
+        print("Left cursor is in the right pane, this should not happen")
 
     if cursors["right"][x] < mid_x:
-        print("EERRROOOR RIGHT")
+        print("Right cursor is in the left pane, this should not happen")
+
     user_looking = user_looking_where()
 
+    # poor man's debugging; we only update this once a second.
     if now_s() - last_s > 1 and tracked != user_looking:
         tracked = user_looking
         cursor = cursors[tracked]
         pyautogui.moveTo(cursor[x], cursor[y])
         last_s = now_s()
+
     is_still = still()
 
     currentMouseX, currentMouseY = pyautogui.position()
 
+    # when the user crosses over we force update the AI result
     if tracked == "left" and currentMouseX > mid_x or tracked == "right" and currentMouseX < mid_x:
         print("CROSS")
         tracked = other()
         tell_user_looking(tracked)
 
+    # only save the cursor position if the user is somewhat still
     if is_still:
         cursors[tracked][x] = currentMouseX
         cursors[tracked][y] = currentMouseY
+
     if False:
         print('left  {}'.format(left))
         print('right {}'.format(right))
@@ -159,11 +180,13 @@ while True:
 
     frames+=1
     now = now_s()
-    if frames%10 ==0:
-        print(frames/(now-start_s))
+
+    if debug:
+        if frames%10 ==0:
+            print(frames/(now-start_s))
 
 
-    if cv2.waitKey(1) == 27:
-        break
+        if cv2.waitKey(1) == 27:
+            break
 
     time.sleep(0.1)
