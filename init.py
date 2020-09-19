@@ -20,17 +20,24 @@ def articifial_intel():
 
     gaze.refresh(frame)
     frame = gaze.annotated_frame()
+    cv2.putText(frame, tracked, (90, 130), cv2.FONT_HERSHEY_DUPLEX, 2.0, (147, 58, 31), 1)
+    cv2.imshow("Demo", frame)
 
     if gaze.is_blinking():
+        print("BLINK182 (same)")
         return tracked
     elif gaze.is_right():
+        print("RIGHT (right)")
         return "right"
     elif gaze.is_left():
+        print("LEFT (left)")
         return "left"
     elif gaze.is_center():
-        return "left"
-    else:
+        print("CENTER (RIGHT)")
         return "right"
+    else:
+        print("I GUESS NOT (same)")
+        return tracked
 
 def user_looking_where():
     now_looking = articifial_intel()
@@ -46,10 +53,9 @@ def tell_user_looking(whr):
     looking[where] = whr
     looking[forced] = True
 
-start_s = now_s()
-
 screenWidth, screenHeight = pyautogui.size()
-mid_x = screenWidth / 2
+mid_x = screenWidth#screenWidth / 2
+quarter = screenWidth / 2# screenWidth / 4
 
 currentMouseX, currentMouseY = pyautogui.position()
 
@@ -77,14 +83,14 @@ def crossed():
 
 if currentMouseX < mid_x:
     tracked = "left"
-    left[x] = currentMouseX if currentMouseX < mid_x else screenWidth / 4
+    left[x] = currentMouseX if currentMouseX < mid_x else quarter
     left[y] = currentMouseY
 
-    right[x] = mid_x + screenWidth / 4
+    right[x] = mid_x + quarter
     right[y] = screenHeight / 2
 else:
     tracked = "right"
-    left[x] = screenWidth / 4
+    left[x] = quarter
     left[y] = screenHeight / 2
 
     right[x] = currentMouseX
@@ -97,7 +103,7 @@ still_minus_2 = cursor[x]
 still_minus_1 = cursor[x]
 still_minus_0 = cursor[x]
 
-print(still_minus_1)
+#print(still_minus_1)
 
 def still():
 
@@ -112,7 +118,10 @@ def still():
     still_minus_0 = currentMouseX
     return still_minus_2 == still_minus_1 and still_minus_1 == still_minus_0
 
-while now_s() - start_s < 60:
+frames = 0
+start_s = now_s()
+last_s=0
+while True:
     # for _ in range(1,100):
         # print("")
 
@@ -123,11 +132,11 @@ while now_s() - start_s < 60:
         print("EERRROOOR RIGHT")
     user_looking = user_looking_where()
 
-    if tracked != user_looking:
+    if now_s() - last_s > 1 and tracked != user_looking:
         tracked = user_looking
         cursor = cursors[tracked]
         pyautogui.moveTo(cursor[x], cursor[y])
-
+        last_s = now_s()
     is_still = still()
 
     currentMouseX, currentMouseY = pyautogui.position()
@@ -136,36 +145,25 @@ while now_s() - start_s < 60:
         print("CROSS")
         tracked = other()
         tell_user_looking(tracked)
-    else:
-        print("")
 
     if is_still:
         cursors[tracked][x] = currentMouseX
         cursors[tracked][y] = currentMouseY
+    if False:
+        print('left  {}'.format(left))
+        print('right {}'.format(right))
+        print('tracked  {}'.format(tracked))
+        print('looking {}'.format(looking))
+        print('AI {}'.format(articifial_intel()))
+        print('still {}'.format(is_still))
 
-    print('left  {}'.format(left))
-    print('right {}'.format(right))
-    print('tracked  {}'.format(tracked))
-    print('looking {}'.format(looking))
-    print('AI {}'.format(articifial_intel()))
-    print('still {}'.format(is_still))
+    frames+=1
+    now = now_s()
+    if frames%10 ==0:
+        print(frames/(now-start_s))
+
+
+    if cv2.waitKey(1) == 27:
+        break
+
     time.sleep(0.1)
-
-while True:
-    # We get a new frame from the webcam
-    _, frame = webcam.read()
-
-    # We send this frame to GazeTracking to analyze it
-    gaze.refresh(frame)
-
-    frame = gaze.annotated_frame()
-    text = ""
-
-    if gaze.is_blinking():
-        text = "Blinking"
-    elif gaze.is_right():
-        text = "Looking right"
-    elif gaze.is_left():
-        text = "Looking left"
-    elif gaze.is_center():
-        text = "Looking center"
